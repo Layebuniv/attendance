@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Attendance Check-in</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; }
+        .container { background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; backdrop-filter: blur(10px); }
+        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📍 Attendance Check-in</h1>
+        <div class="spinner" id="spinner"></div>
+        <p id="status">Detecting your location...</p>
+    </div>
+    <script>
+        const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSf04ebUQtEXyq26c0BWZdR5jZTGcZ88tVZmzKxmozqMK6JBBQ/viewform?usp=pp_url&entry.54244225=name&entry.1662270555=First+Name&entry.51956335=111111111&entry.1904193563=1/1&entry.1522948287=LOCATION_PLACEHOLDER";
+        const spinner = document.getElementById('spinner');
+        const status = document.getElementById('status');
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    spinner.style.display = 'none';
+                    const coords = pos.coords.latitude.toFixed(6) + ", " + pos.coords.longitude.toFixed(6);
+                    const url = formUrl.replace("LOCATION_PLACEHOLDER", encodeURIComponent(coords));
+                    status.innerHTML = '<p class="success">✅ Location captured! Redirecting to form...</p>';
+                    setTimeout(() => { window.location.href = url; }, 1500);
+                },
+                function(error) {
+                    spinner.style.display = 'none';
+                    status.innerHTML = '<p class="error">❌ Location access denied. Please enable location services and try again. <br><a href="' + formUrl.replace("LOCATION_PLACEHOLDER", "Manual+Entry") + '" style="color: #ffc107;">Continue without location</a></p>';
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            spinner.style.display = 'none';
+            status.innerHTML = '<p class="error">❌ Geolocation not supported. <a href="' + formUrl.replace("LOCATION_PLACEHOLDER", "Manual+Entry") + '" style="color: #ffc107;">Continue to form</a></p>';
+        }
+    </script>
+</body>
+</html>
