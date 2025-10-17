@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance QR Code Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .qr-display {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        #qrImage {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            max-width: 100%;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        button.secondary {
+            background: #28a745;
+        }
+        
+        button.tertiary {
+            background: #6c757d;
+        }
+        
+        .info-section {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .info-section h3 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+        
+        .info-section p {
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        
+        .url-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 15px 0;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .test-section {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .test-section h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        #testResult {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        #testResult.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        #testResult.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        .instructions {
+            background: #d1ecf1;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .instructions h3 {
+            color: #0c5460;
+            margin-bottom: 15px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-box h4 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-box p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .print-card {
+            background: white;
+            padding: 40px;
+            text-align: center;
+            page-break-after: always;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .card:not(.print-card) {
+                display: none;
+            }
+            .print-card {
+                box-shadow: none;
+            }
+            button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>📱 Class Attendance QR Code</h1>
+            <p class="subtitle">Scan to check in with automatic location tracking</p>
+            
+            <div class="qr-display">
+                <img id="qrImage" src="" alt="QR Code">
+                <p style="margin-top: 15px; color: #666; font-size: 14px;">
+                    <strong>Scan this code with your phone camera</strong>
+                </p>
+            </div>
+            
+            <div class="button-group">
+                <button onclick="downloadQR()">📥 Download QR Code</button>
+                <button onclick="printQR()" class="secondary">🖨️ Print QR Code</button>
+                <button onclick="copyURL()" class="tertiary">📋 Copy URL</button>
+                <button onclick="testURL()">🧪 Test Location</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="instructions">
+                <h3>📖 How to Use This Attendance System</h3>
+                <ol>
+                    <li><strong>Display the QR Code:</strong> Print or project this QR code in your classroom</li>
+                    <li><strong>Students Scan:</strong> Students use their phone camera to scan the code</li>
+                    <li><strong>Grant Permission:</strong> Browser will ask for location permission - students must allow</li>
+                    <li><strong>Auto-Fill:</strong> Location coordinates are automatically captured and filled</li>
+                    <li><strong>Submit Form:</strong> Students complete their name, ID, and submit</li>
+                </ol>
+            </div>
+
+            <div class="info-section">
+                <h3>✅ What Gets Captured</h3>
+                <p>✓ Student's GPS coordinates (latitude, longitude)</p>
+                <p>✓ Exact timestamp of submission</p>
+                <p>✓ Student name, ID, and class information</p>
+                <p>✓ All data saved directly to your Google Form responses</p>
+            </div>
+
+            <div class="test-section">
+                <h3>🧪 Test Your Location</h3>
+                <p>Click "Test Location" above to verify location detection works on your device</p>
+                <div id="testResult"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 20px; color: #333;">📊 Your Form Details</h2>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <h4>✓</h4>
+                    <p>Location Enabled</p>
+                </div>
+                <div class="stat-box">
+                    <h4>✓</h4>
+                    <p>QR Code Ready</p>
+                </div>
+                <div class="stat-box">
+                    <h4>✓</h4>
+                    <p>Auto-Fill Active</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h3 style="color: #333; margin-bottom: 10px;">Your Smart URL:</h3>
+                <div class="url-box" id="urlDisplay"></div>
+            </div>
+
+            <div class="info-section" style="margin-top: 20px;">
+                <h3>💡 Tips for Best Results</h3>
+                <p><strong>For Teachers:</strong></p>
+                <p>• Display QR code prominently at classroom entrance</p>
+                <p>• Test the system before class starts</p>
+                <p>• Have a backup manual sign-in sheet</p>
+                <br>
+                <p><strong>For Students:</strong></p>
+                <p>• Enable location services before scanning</p>
+                <p>• Use a modern browser (Chrome, Safari, Firefox)</p>
+                <p>• Ensure GPS is turned on</p>
+                <p>• Grant location permission when prompted</p>
+            </div>
+        </div>
+
+        <!-- Hidden print-only card -->
+        <div class="card print-card" id="printCard">
+            <h1 style="margin-bottom: 20px;">📋 Class Attendance</h1>
+            <h2 style="color: #667eea; margin-bottom: 30px;">Scan to Check In</h2>
+            <img id="printQR" src="" alt="QR Code" style="width: 400px; height: 400px;">
+            <p style="margin-top: 30px; font-size: 18px; color: #666;">
+                Scan this code with your phone camera<br>
+                and allow location access when prompted
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Your attendance URL
+        const attendanceURL = 'data:text/html,<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Attendance Check-in</title><style>body{font-family:Arial,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;text-align:center;}.container{background:rgba(255,255,255,0.1);padding:40px;border-radius:20px;backdrop-filter:blur(10px);}.spinner{border:4px solid rgba(255,255,255,0.3);border-top:4px solid white;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin:20px auto;}@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}</style></head><body><div class="container"><h1>📍 Attendance Check-in</h1><div class="spinner"></div><p id="status">Detecting your location...</p></div><script>const formUrl="https://docs.google.com/forms/d/e/1FAIpQLSf04ebUQtEXyq26c0BWZdR5jZTGcZ88tVZmzKxmozqMK6JBBQ/viewform?usp=pp_url&entry.54244225=name&entry.1662270555=First+Name&entry.51956335=111111111&entry.1904193563=1/1&entry.1522948287=LOCATION_PLACEHOLDER";if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(pos){const coords=pos.coords.latitude.toFixed(6)+", "+pos.coords.longitude.toFixed(6);const url=formUrl.replace("LOCATION_PLACEHOLDER",encodeURIComponent(coords));window.location.href=url;},function(error){document.getElementById("status").textContent="❌ Location access denied. Please enable location services and try again.";});}else{document.getElementById("status").textContent="❌ Geolocation is not supported by your browser.";}<\/script></body></html>';
+
+        // Generate QR Code
+        function generateQRCode() {
+            const qrAPIUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(attendanceURL)}`;
+            document.getElementById('qrImage').src = qrAPIUrl;
+            document.getElementById('printQR').src = qrAPIUrl;
+            document.getElementById('urlDisplay').textContent = attendanceURL;
+        }
+
+        // Download QR Code
+        function downloadQR() {
+            const qrImage = document.getElementById('qrImage');
+            const link = document.createElement('a');
+            link.href = qrImage.src;
+            link.download = 'attendance-qr-code.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Print QR Code
+        function printQR() {
+            window.print();
+        }
+
+        // Copy URL to clipboard
+        function copyURL() {
+            navigator.clipboard.writeText(attendanceURL).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }).catch(() => {
+                alert('Failed to copy. Please copy manually from the URL box below.');
+            });
+        }
+
+        // Test location functionality
+        function testURL() {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.className = '';
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '📍 Testing location access...';
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude.toFixed(6);
+                        const lon = position.coords.longitude.toFixed(6);
+                        resultDiv.className = 'success';
+                        resultDiv.innerHTML = `
+                            <strong>✅ Location Test Successful!</strong><br><br>
+                            <strong>Latitude:</strong> ${lat}<br>
+                            <strong>Longitude:</strong> ${lon}<br>
+                            <strong>Accuracy:</strong> ±${position.coords.accuracy.toFixed(0)} meters<br><br>
+                            <em>This location will be automatically captured when students scan the QR code.</em>
+                        `;
+                    },
+                    function(error) {
+                        resultDiv.className = 'error';
+                        resultDiv.innerHTML = `
+                            <strong>❌ Location Test Failed</strong><br><br>
+                            <strong>Error:</strong> ${error.message}<br><br>
+                            <strong>Common solutions:</strong><br>
+                            • Enable location services in your device settings<br>
+                            • Grant location permission to your browser<br>
+                            • Use HTTPS or localhost (HTTP may block location)<br>
+                            • Try a different browser
+                        `;
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <strong>❌ Geolocation Not Supported</strong><br><br>
+                    Your browser doesn't support location services. Please use a modern browser like Chrome, Firefox, or Safari.
+                `;
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', generateQRCode);
+    </script>
+</body>
+</html>
